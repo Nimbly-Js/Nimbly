@@ -1,6 +1,7 @@
 <br />
 <div align="center">
     <img src="logo.png" alt="Logo" height="70">
+    <br />
   <p align="center">
     Automates CRUD endpoints creation for your API
     <br />
