@@ -1,0 +1,8 @@
+node_modules
+.DS_Store
+*.tgz
+*.lock
+*.lockb
+dist
+
+.idea
