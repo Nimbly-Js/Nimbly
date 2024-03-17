@@ -4,7 +4,7 @@ import {notAuthorized, serverError} from "./errors";
 import {CreateEndpoint, DeleteEndpoint, GetAllEndpoint, GetEnpoint, UpdateEndpoint} from "./endpoints";
 import {Hono} from "hono";
 import {PrismaClient} from "@prisma/client";
-import {printError} from "./utils.js";
+import {isDev, printError} from "./utils.js";
 import chalk from "chalk";
 
 export class Router {
@@ -57,13 +57,29 @@ export class Router {
         if (!this.config.table) throw new Error("Table is required")
     }
 
+    private addRoute(method: string, path: string, endpoint: IEndpoint, args: GlobalGeneratorProps | CustomGeneratorProps, custom = false) {
+        this.route.routes.push({
+            method: method.toUpperCase(),
+            path,
+            handler: endpoint,
+            ...(isDev() && {
+                config: {
+                    requireAuth: args!.requireAuth,
+                    requireAdmin: args!.requireAdmin,
+                    custom,
+                    config: this.config
+                }
+            })
+        })
+    }
+
     private get() {
         const args = GetGenerator(this.config)
         if (!args) return
         this.checkTable()
         if (!args.endpoint) args.endpoint = GetEnpoint(args, this.config.table!)
         else args.endpoint = this.customEndpointHandler(args.endpoint)
-        this.route.get("/:id", this.handleMiddleware(args, args.endpoint))
+        this.addRoute("GET", `/:id`, this.handleMiddleware(args, args.endpoint), args)
     }
 
     private getAll() {
@@ -72,7 +88,7 @@ export class Router {
         this.checkTable()
         if (!args.endpoint) args.endpoint = GetAllEndpoint(args, this.config.table!)
         else args.endpoint = this.customEndpointHandler(args.endpoint)
-        this.route.get("/", this.handleMiddleware(args, args.endpoint))
+        this.addRoute("GET", "/", this.handleMiddleware(args, args.endpoint), args)
     }
 
     private create() {
@@ -81,7 +97,7 @@ export class Router {
         this.checkTable()
         if (!args.endpoint) args.endpoint = CreateEndpoint(args, this.config.table!)
         else args.endpoint = this.customEndpointHandler(args.endpoint)
-        this.route.post("/", this.handleMiddleware(args, args.endpoint))
+        this.addRoute("POST", "/", this.handleMiddleware(args, args.endpoint), args)
     }
 
     private update() {
@@ -90,7 +106,7 @@ export class Router {
         this.checkTable()
         if (!args.endpoint) args.endpoint = UpdateEndpoint(args, this.config.table!)
         else args.endpoint = this.customEndpointHandler(args.endpoint)
-        this.route.put("/:id", this.handleMiddleware(args, args.endpoint))
+        this.addRoute("PUT", "/:id", this.handleMiddleware(args, args.endpoint), args)
     }
 
     private delete() {
@@ -99,14 +115,14 @@ export class Router {
         this.checkTable()
         if (!args.endpoint) args.endpoint = DeleteEndpoint(args, this.config.table!)
         else args.endpoint = this.customEndpointHandler(args.endpoint)
-        this.route.delete("/:id", this.handleMiddleware(args, args.endpoint))
+        this.addRoute("DELETE", "/:id", this.handleMiddleware(args, args.endpoint), args)
     }
 
     private custom() {
         const args = CustomGenerator(this.config)
         if (!args) return
         for (const arg of args)
-            this.route[arg.method](arg.path, this.handleMiddleware(arg, this.customEndpointHandler(arg.endpoint)))
+            this.addRoute(arg.method, arg.path, this.handleMiddleware(arg, this.customEndpointHandler(arg.endpoint)), arg, true)
     }
 
     static prisma(): PrismaClient {

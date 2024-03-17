@@ -11,5 +11,5 @@ export function methodColor(method: string, id?: string) {
         case "DELETE":
             return chalk.whiteBright.bgGreen(" DELETE ")
     }
-    return chalk.bgGray.whiteBright(" " + method.toLowerCase() + " ")
+    return chalk.bgGray.whiteBright(" " + method.toUpperCase() + " ")
 }
