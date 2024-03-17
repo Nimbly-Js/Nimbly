@@ -75,19 +75,18 @@ function addEndpoint(keys, method, obj) {
 }
 
 function printObjectTree(obj, routesInfos, depth = 0, last = false) {
-    const indent = chalk.grey('│  '.repeat(depth));
-    const branch = chalk.grey(last ? '└─ ' : '├─ ');
+    const count = last && depth > 1 ? depth - 1 : depth
+    const indent = chalk.grey('│  '.repeat(count)) + (last ? "   " : "")
     Object.entries(obj).forEach(([key, value], index, array) => {
-        const isLast = index === array.length - 1;
+        const isLast = index === array.length - 1
         const infos = depth === 0 ? (routesInfos[key].requireAdmin ? " ⭐" : (routesInfos[key].requireAuth ? " 🔒" : " 🚫")) : ""
         key = depth === 0 ? chalk.bgCyanBright.whiteBright(`${key}`) : (typeof value !== "string" ? chalk.bgYellow.whiteBright(`${key}`) : chalk.bgMagenta.whiteBright(`${key}`));
+        const lineBranch = chalk.grey((depth !== 0 && isLast) ? '└─ ' : '├─ ');
         if (typeof value === 'object' && value !== null) {
-            console.log(`${indent}${branch}${key}${infos}`);
+            console.log(`${indent}${lineBranch}${key}${infos}`);
             printObjectTree(value, routesInfos, depth + 1, isLast);
-        } else {
-            const lineBranch = chalk.grey((depth !== 0 && isLast) ? '└─ ' : '├─ ');
+        } else
             console.log(`${indent}${lineBranch}${key} ${value}`);
-        }
         if (depth === 0 && !isLast) console.log(chalk.grey("│"));
     });
 }
