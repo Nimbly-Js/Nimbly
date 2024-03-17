@@ -7,6 +7,7 @@ export type IParser = (c: IContext, data: object) => Promise<object>
 
 export interface IContext extends Context {
     user?: any
+    end?: (code: number, data?: any) => Response
 }
 
 export type CommonProps = {

@@ -1,6 +1,6 @@
 import {CustomGeneratorProps, GlobalGeneratorProps, IContext, IEndpoint, RouterProps} from "./types";
 import {CreateUpdateGenerator, CustomGenerator, DeleteGenerator, GetAllGenerator, GetGenerator} from "./generator";
-import {notAuthorized, serverError} from "./errors";
+import {generic, notAuthorized, serverError} from "./errors";
 import {CreateEndpoint, DeleteEndpoint, GetAllEndpoint, GetEnpoint, UpdateEndpoint} from "./endpoints";
 import {Hono} from "hono";
 import {PrismaClient} from "@prisma/client";
@@ -19,6 +19,7 @@ export class Router {
 
     private authHandler(endpoint: IEndpoint, requireAuth: boolean, requireAdmin: boolean): (c: IContext) => Promise<any> {
         return async (c: IContext) => {
+            c.end = generic(c)
             if (requireAuth) {
                 // @ts-ignore
                 const res = await this.config.authMiddleware(c)
